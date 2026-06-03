@@ -21,4 +21,4 @@ When they solve it, a small celebration plays and their completion is remembered
 
 - [Next.js 14](https://nextjs.org) — App Router
 - [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) — image storage
-- React 18 — puzzle mechanics via canvas API and native drag-and-drop
+- [React 18](https://react.dev) — puzzle mechanics via canvas API and native drag-and-drop
