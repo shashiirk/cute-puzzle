@@ -6,7 +6,7 @@ Turn a special photo into a jigsaw puzzle and share it with your long-distance p
 
 ## What it does
 
-Upload a photo, write a personal message, and choose a difficulty. The app generates a shareable link — send it to your partner and they can solve the puzzle on any device, no account needed.
+Upload a photo, write a personal message, and choose a difficulty. The app generates a shareable link. Send it to your partner and they can solve the puzzle on any device, no account needed.
 
 When they solve it, a small celebration plays and their completion is remembered in their browser so they can always come back to it.
 
@@ -21,6 +21,6 @@ When they solve it, a small celebration plays and their completion is remembered
 
 ## Stack
 
-- [Next.js 14](https://nextjs.org) — App Router
-- [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) — image storage
-- [React 18](https://react.dev) — puzzle mechanics via canvas API and native drag-and-drop
+- [Next.js 14](https://nextjs.org): App Router
+- [Vercel Blob](https://vercel.com/docs/storage/vercel-blob): image storage
+- [React 18](https://react.dev): puzzle mechanics via canvas API and native drag-and-drop
