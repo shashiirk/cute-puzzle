@@ -1,0 +1,23 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --rose: #e8547a;
+  --lavender: #9b72cf;
+  --cream: #fff8f9;
+  --text: #2d1b2e;
+  --text-muted: #7a5c7e;
+}
+
+html, body {
+  height: 100%;
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; font-family: inherit; }
