@@ -19,7 +19,10 @@ function markCompleted(challengeId) {
   localStorage.setItem(LS_KEY, JSON.stringify(completions))
 }
 
-export default function ChallengeClient({ challengeId, imageSrc, gridSize }) {
+const FALLBACK_MESSAGE = "Someone who cares about you made this puzzle just for you. Can you put the pieces together?"
+
+export default function ChallengeClient({ challengeId, imageSrc, gridSize, message }) {
+  const displayMessage = message && message.trim() ? message.trim() : FALLBACK_MESSAGE
   // 'intro' | 'playing' | 'won'
   const [stage, setStage] = useState('intro')
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
@@ -56,8 +59,7 @@ export default function ChallengeClient({ challengeId, imageSrc, gridSize }) {
             A special puzzle is waiting for you
           </h1>
           <p style={{ color: '#7a5c7e', lineHeight: 1.6, fontSize: '0.95rem' }}>
-            Someone who cares about you made this puzzle just for you.
-            Can you put the pieces together?
+            {displayMessage}
           </p>
 
           {/* Blurred preview */}

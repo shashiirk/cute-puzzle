@@ -3,6 +3,11 @@ import './globals.css'
 export const metadata = {
   title: 'Love Puzzle — Turn Memories Into Magic',
   description: 'Create a custom photo puzzle and share it with your long-distance partner.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({ children }) {

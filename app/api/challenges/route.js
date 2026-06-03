@@ -6,7 +6,7 @@ export const maxDuration = 30
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { imageSrc, imageUrl, gridSize } = body
+    const { imageSrc, imageUrl, gridSize, message } = body
 
     const gs = Number(gridSize)
     if (!gs || gs < 2 || gs > 8) {
@@ -18,14 +18,16 @@ export async function POST(request) {
       if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('https://')) {
         return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 })
       }
-      const id = await saveChallenge(imageUrl, gs)
+      const msg = typeof message === 'string' ? message.slice(0, 280) : ''
+      const id = await saveChallenge(imageUrl, gs, msg)
       return NextResponse.json({ id })
     } else {
       // Local dev: image arrives as a base64 data URL
       if (!imageSrc || typeof imageSrc !== 'string' || !imageSrc.startsWith('data:image/')) {
         return NextResponse.json({ error: 'imageSrc is required' }, { status: 400 })
       }
-      const id = await saveChallenge(imageSrc, gs)
+      const msg = typeof message === 'string' ? message.slice(0, 280) : ''
+      const id = await saveChallenge(imageSrc, gs, msg)
       return NextResponse.json({ id })
     }
   } catch (err) {

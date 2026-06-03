@@ -12,6 +12,7 @@ export default async function ChallengePage({ params }) {
       challengeId={challenge.id}
       imageSrc={challenge.imageSrc}
       gridSize={challenge.gridSize}
+      message={challenge.message || ''}
     />
   )
 }

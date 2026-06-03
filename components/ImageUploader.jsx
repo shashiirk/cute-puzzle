@@ -14,9 +14,12 @@ export default function ImageUploader({ onChallenge }) {
   const [file, setFile] = useState(null)       // original File object
   const [preview, setPreview] = useState(null) // object URL for display
   const [gridSize, setGridSize] = useState(4)
+  const [message, setMessage] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState(null)
+
+  const FALLBACK_MESSAGE = "Someone who cares about you made this puzzle just for you. Can you put the pieces together?"
 
   function handleFile(f) {
     if (!f || !f.type.startsWith('image/')) return
@@ -55,11 +58,11 @@ export default function ImageUploader({ onChallenge }) {
           access: 'public',
           handleUploadUrl: '/api/blob-upload',
         })
-        body = { imageUrl: blob.url, gridSize }
+        body = { imageUrl: blob.url, gridSize, message: message.trim() }
       } else {
         // Local dev fallback: convert to base64 and send in the request body
         const imageSrc = await fileToBase64(file)
-        body = { imageSrc, gridSize }
+        body = { imageSrc, gridSize, message: message.trim() }
       }
 
       const res = await fetch('/api/challenges', {
@@ -172,6 +175,37 @@ export default function ImageUploader({ onChallenge }) {
                 <div style={{ fontSize: '0.75rem', color: '#7a5c7e', marginTop: 2 }}>{opt.sublabel}</div>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Personal message */}
+        <div>
+          <div style={{
+            fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.06em', color: '#2d1b2e', marginBottom: 10,
+          }}>
+            Personal message <span style={{ color: '#9b72cf', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </div>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={280}
+            rows={3}
+            placeholder={FALLBACK_MESSAGE}
+            style={{
+              width: '100%', resize: 'vertical',
+              border: '1.5px solid #e8c8d0', borderRadius: 10,
+              padding: '10px 12px', fontSize: '0.88rem',
+              fontFamily: 'inherit', color: '#2d1b2e',
+              lineHeight: 1.5, outline: 'none',
+              transition: 'border-color 0.15s',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#9b72cf'}
+            onBlur={(e) => e.target.style.borderColor = '#e8c8d0'}
+          />
+          <div style={{ textAlign: 'right', fontSize: '0.72rem', color: '#b8a0bc', marginTop: 4 }}>
+            {message.length}/280
           </div>
         </div>
 
