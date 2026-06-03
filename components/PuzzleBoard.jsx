@@ -1,41 +1,52 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { usePuzzle } from '@/hooks/usePuzzle'
 import Confetti from './Confetti'
 
-/**
- * PuzzleBoard — rendered only after pieces are loaded.
- * Owns all drag/drop state and game logic via usePuzzle.
- */
-export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
+export default function PuzzleBoard({ pieces, aspectRatio, gridSize, imageSrc, onSolved }) {
   const rows = gridSize
   const cols = gridSize
 
   const puzzle = usePuzzle(pieces, rows, cols)
 
   const [drag, setDrag] = useState(null)
-  // drag = { pieceId, currentX, currentY }
 
-  const [pieceSize, setPieceSize] = useState(80)
+  // pieceW and pieceH respect the image's aspect ratio
+  const [dims, setDims] = useState({ pieceW: 80, pieceH: 80 })
 
   useEffect(() => {
     function calc() {
       const vw = window.innerWidth
       const vh = window.innerHeight
-      const available = Math.min(vw * 0.52, vh * 0.76, 560)
-      setPieceSize(Math.floor(available / gridSize))
+
+      // Maximum space we want the board to occupy
+      const maxBoardW = Math.min(vw * 0.55, 640)
+      const maxBoardH = vh * 0.75
+
+      // Fit the board within that box while keeping the image's aspect ratio
+      let boardW = maxBoardW
+      let boardH = boardW / aspectRatio
+
+      if (boardH > maxBoardH) {
+        boardH = maxBoardH
+        boardW = boardH * aspectRatio
+      }
+
+      setDims({
+        pieceW: Math.floor(boardW / cols),
+        pieceH: Math.floor(boardH / rows),
+      })
     }
     calc()
     window.addEventListener('resize', calc)
     return () => window.removeEventListener('resize', calc)
-  }, [gridSize])
+  }, [aspectRatio, rows, cols])
 
-  // Notify parent on solve
   useEffect(() => {
     if (puzzle.solved) onSolved?.()
   }, [puzzle.solved, onSolved])
 
-  // ── Drag handlers ──────────────────────────────────────────────────────────
+  // ── Drag handlers ────────────────────────────────────────────────────────────
 
   const startDrag = useCallback((e, pieceId) => {
     e.preventDefault()
@@ -57,7 +68,6 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
     const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX
     const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY
 
-    // Hide ghost so elementFromPoint can find the slot underneath
     const ghost = document.getElementById('drag-ghost')
     if (ghost) ghost.style.visibility = 'hidden'
     const el = document.elementFromPoint(clientX, clientY)
@@ -65,13 +75,11 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
 
     const slotEl = el?.closest('[data-slot]')
     if (slotEl) {
-      const row = parseInt(slotEl.dataset.row, 10)
-      const col = parseInt(slotEl.dataset.col, 10)
-      puzzle.placePiece(drag.pieceId, row, col)
+      puzzle.placePiece(drag.pieceId, parseInt(slotEl.dataset.row, 10), parseInt(slotEl.dataset.col, 10))
     } else {
-      // Dropped outside board: return to tray if it was on the board
-      const isOnBoard = puzzle.board.some((row) => row.includes(drag.pieceId))
-      if (isOnBoard) puzzle.returnToTray(drag.pieceId)
+      if (puzzle.board.some((row) => row.includes(drag.pieceId))) {
+        puzzle.returnToTray(drag.pieceId)
+      }
     }
     setDrag(null)
   }, [drag, puzzle])
@@ -89,7 +97,9 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
     }
   }, [onMove, onUp])
 
-  const boardSize = pieceSize * gridSize
+  const { pieceW, pieceH } = dims
+  const boardW = pieceW * cols
+  const boardH = pieceH * rows
   const draggingPiece = drag ? pieces.find((p) => p.id === drag.pieceId) : null
 
   return (
@@ -98,9 +108,7 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
 
       {/* Progress bar */}
       <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          flex: 1, height: 8, background: '#f0e8ff', borderRadius: 99, overflow: 'hidden',
-        }}>
+        <div style={{ flex: 1, height: 8, background: '#f0e8ff', borderRadius: 99, overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${(puzzle.placedCount / puzzle.totalPieces) * 100}%`,
@@ -115,15 +123,11 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
         <button onClick={puzzle.reset} style={btnStyle}>↺ Reset</button>
       </div>
 
-      {/* Solved banner */}
       {puzzle.solved && (
         <div style={{
           background: 'linear-gradient(135deg, #e8547a, #9b72cf)',
-          color: 'white',
-          textAlign: 'center',
-          padding: '14px',
-          fontFamily: "'Playfair Display', serif",
-          fontSize: '1.1rem',
+          color: 'white', textAlign: 'center', padding: '14px',
+          fontFamily: "'Playfair Display', serif", fontSize: '1.1rem',
         }}>
           ♡ You solved it! ♡
         </div>
@@ -131,20 +135,15 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
 
       {/* Game area */}
       <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        gap: 24,
-        padding: 20,
-        flexWrap: 'wrap',
+        flex: 1, display: 'flex', alignItems: 'flex-start',
+        justifyContent: 'center', gap: 24, padding: 20, flexWrap: 'wrap',
       }}>
         {/* Board */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, ${pieceSize}px)`,
-          width: boardSize,
-          height: boardSize,
+          gridTemplateColumns: `repeat(${cols}, ${pieceW}px)`,
+          width: boardW,
+          height: boardH,
           border: '2px solid #e8c8d0',
           borderRadius: 12,
           overflow: 'hidden',
@@ -163,18 +162,17 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
                   data-slot="true"
                   data-row={r}
                   data-col={c}
-                  style={{ width: pieceSize, height: pieceSize, position: 'relative', overflow: 'hidden' }}
+                  style={{ width: pieceW, height: pieceH, position: 'relative', overflow: 'hidden' }}
                 >
-                  {/* Ghost guide */}
+                  {/* Ghost guide — background-size matches full board dimensions */}
                   <div style={{
                     position: 'absolute', inset: 0,
                     backgroundImage: `url(${imageSrc})`,
-                    backgroundSize: `${boardSize}px ${boardSize}px`,
-                    backgroundPosition: `-${c * pieceSize}px -${r * pieceSize}px`,
+                    backgroundSize: `${boardW}px ${boardH}px`,
+                    backgroundPosition: `-${c * pieceW}px -${r * pieceH}px`,
                     opacity: piece && !beingDragged ? 0 : 0.13,
                     transition: 'opacity 0.2s',
                   }} />
-                  {/* Border */}
                   <div style={{
                     position: 'absolute', inset: 0,
                     border: '1px solid rgba(232,84,122,0.18)',
@@ -211,16 +209,10 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
 
         {/* Piece tray */}
         <div style={{
-          background: 'white',
-          border: '2px solid #e8c8d0',
-          borderRadius: 16,
-          padding: 14,
-          minWidth: 160,
-          maxWidth: 220,
-          maxHeight: 'calc(100vh - 160px)',
-          overflowY: 'auto',
-          boxShadow: '0 4px 20px rgba(155,114,207,0.12)',
-          flexShrink: 0,
+          background: 'white', border: '2px solid #e8c8d0', borderRadius: 16,
+          padding: 14, minWidth: 160, maxWidth: 220,
+          maxHeight: 'calc(100vh - 160px)', overflowY: 'auto',
+          boxShadow: '0 4px 20px rgba(155,114,207,0.12)', flexShrink: 0,
         }}>
           <div style={{
             fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
@@ -236,12 +228,11 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
                 <div
                   key={pid}
                   style={{
-                    width: pieceSize, height: pieceSize,
-                    borderRadius: 6, overflow: 'hidden',
-                    cursor: 'grab',
+                    width: pieceW, height: pieceH,
+                    borderRadius: 6, overflow: 'hidden', cursor: 'grab',
                     border: '2px solid transparent',
                     opacity: beingDragged ? 0.25 : 1,
-                    transition: 'border-color 0.15s, transform 0.15s',
+                    transition: 'border-color 0.15s',
                     flexShrink: 0,
                   }}
                   onMouseDown={(e) => !beingDragged && startDrag(e, pid)}
@@ -272,13 +263,10 @@ export default function PuzzleBoard({ pieces, gridSize, imageSrc, onSolved }) {
           src={draggingPiece.src}
           draggable={false}
           style={{
-            position: 'fixed',
-            pointerEvents: 'none',
-            zIndex: 9999,
-            width: pieceSize,
-            height: pieceSize,
-            left: drag.currentX - pieceSize / 2,
-            top: drag.currentY - pieceSize / 2,
+            position: 'fixed', pointerEvents: 'none', zIndex: 9999,
+            width: pieceW, height: pieceH,
+            left: drag.currentX - pieceW / 2,
+            top: drag.currentY - pieceH / 2,
             borderRadius: 6,
             boxShadow: '0 8px 32px rgba(155,114,207,0.4)',
             transform: 'scale(1.08) rotate(2deg)',

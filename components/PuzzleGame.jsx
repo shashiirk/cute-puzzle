@@ -3,20 +3,15 @@ import { useState, useEffect } from 'react'
 import { cutImageIntoPieces } from '@/lib/puzzleUtils'
 import PuzzleBoard from './PuzzleBoard'
 
-/**
- * Handles image cutting and loading state.
- * Only mounts PuzzleBoard once pieces are ready, which ensures
- * usePuzzle (inside PuzzleBoard) is always initialized with real data.
- */
 export default function PuzzleGame({ imageSrc, gridSize, onSolved }) {
-  const [pieces, setPieces] = useState(null)
+  const [result, setResult] = useState(null)  // { pieces, aspectRatio }
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    setPieces(null)
+    setResult(null)
     setError(null)
     cutImageIntoPieces(imageSrc, gridSize, gridSize)
-      .then(setPieces)
+      .then(setResult)
       .catch(() => setError('Could not load the image. Please try another photo.'))
   }, [imageSrc, gridSize])
 
@@ -28,7 +23,7 @@ export default function PuzzleGame({ imageSrc, gridSize, onSolved }) {
     )
   }
 
-  if (!pieces) {
+  if (!result) {
     return (
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
@@ -48,10 +43,10 @@ export default function PuzzleGame({ imageSrc, gridSize, onSolved }) {
     )
   }
 
-  // PuzzleBoard mounts here with fully loaded pieces — usePuzzle gets real data on init
   return (
     <PuzzleBoard
-      pieces={pieces}
+      pieces={result.pieces}
+      aspectRatio={result.aspectRatio}
       gridSize={gridSize}
       imageSrc={imageSrc}
       onSolved={onSolved}
